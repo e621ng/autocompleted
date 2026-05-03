@@ -196,9 +196,11 @@ async fn main() -> std::io::Result<()> {
     use tokio_postgres::NoTls;
     env_logger::init();
 
-    let config = crate::config::Config::from_env()
-        .expect("Failed to load configuration from environment");
-    let pool = config.pg.create_pool(Some(Runtime::Tokio1), NoTls)
+    let config =
+        crate::config::Config::from_env().expect("Failed to load configuration from environment");
+    let pool = config
+        .pg
+        .create_pool(Some(Runtime::Tokio1), NoTls)
         .expect("Failed to create PostgreSQL connection pool");
     let cache = CacheBuilder::new(15_000)
         .time_to_live(Duration::from_secs(6 * 60 * 60))
