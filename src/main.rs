@@ -128,10 +128,10 @@ impl error::ResponseError for AutocompleteError {
 
 fn validate_transform_tag(tag: &str) -> Result<String, AutocompleteError> {
     use unicode_normalization::UnicodeNormalization;
-    if tag.len() > 100 {
+    if tag.chars().count() > 100 {
         return Err(AutocompleteError::BadRequest);
     }
-    if tag.len() < 3 {
+    if tag.chars().count() < 3 {
         return Err(AutocompleteError::BadRequest);
     }
     let tag_str = tag
