@@ -4,7 +4,8 @@
         tags.name,
         tags.post_count,
         tags.category,
-        NULL AS antecedent_name
+        NULL AS antecedent_name,
+        0 AS sort_priority
     FROM tags
     WHERE tags.name LIKE $1 ESCAPE E'\\'
       AND tags.post_count > 0
@@ -13,7 +14,13 @@
 )
 UNION ALL
 (
-    SELECT id, name, post_count, category, antecedent_name
+    SELECT
+        id,
+        name,
+        post_count,
+        category,
+        antecedent_name,
+        1 AS sort_priority
     FROM (
         SELECT DISTINCT ON (tags.name)
             tags.id,
@@ -32,5 +39,5 @@ UNION ALL
     ORDER BY post_count DESC
     LIMIT 10
 )
-ORDER BY post_count DESC
+ORDER BY sort_priority, post_count DESC
 LIMIT 10
