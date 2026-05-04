@@ -198,7 +198,10 @@ async fn main() -> std::io::Result<()> {
 
     let mut config =
         crate::config::Config::from_env().expect("Failed to load configuration from environment");
-    config.pg.options = Some("-c statement_timeout=3000".to_owned());
+    config.pg.options = Some(match config.pg.options.as_deref() {
+        Some(existing) => format!("{existing} -c statement_timeout=3000"),
+        None => "-c statement_timeout=3000".to_owned(),
+    });
     let pool = config
         .pg
         .create_pool(Some(Runtime::Tokio1), NoTls)
