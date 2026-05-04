@@ -65,7 +65,9 @@ mod db {
         tag_prefix: &String,
     ) -> Result<Vec<Tag>, tokio_postgres::Error> {
         let escape_prefix = escape_like(&(tag_prefix.to_owned() + "*"));
-        let stmt = client.prepare_cached(include_str!("../sql/fetch_tags_a.sql")).await?;
+        let stmt = client
+            .prepare_cached(include_str!("../sql/fetch_tags_a.sql"))
+            .await?;
         let rows = client
             .query(&stmt, &[&escape_prefix])
             .await?
@@ -75,7 +77,9 @@ mod db {
         if !rows.is_empty() {
             return Ok(rows);
         }
-        let stmt = client.prepare_cached(include_str!("../sql/fetch_tags_b.sql")).await?;
+        let stmt = client
+            .prepare_cached(include_str!("../sql/fetch_tags_b.sql"))
+            .await?;
         let rows = client
             .query(&stmt, &[&tag_prefix])
             .await?
