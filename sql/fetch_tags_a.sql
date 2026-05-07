@@ -5,7 +5,7 @@
         tags.post_count,
         tags.category,
         NULL AS antecedent_name,
-        length(tags.name) AS name_length
+        regexp_replace(tags.name, '_\(.*\)$', '') AS stripped_name
     FROM tags
     WHERE tags.name LIKE $1 ESCAPE E'\\'
       AND tags.post_count > 0
@@ -20,7 +20,7 @@ UNION ALL
         post_count,
         category,
         antecedent_name,
-        length(antecedent_name) AS name_length
+        regexp_replace(tags.name, '_\(.*\)$', '') AS stripped_name
     FROM (
         SELECT DISTINCT ON (name)
             id,
@@ -49,5 +49,7 @@ UNION ALL
     ORDER BY post_count DESC
     LIMIT 10
 )
-ORDER BY name_length, post_count DESC
+ORDER BY
+    CASE WHEN regexp_replace(tags.name, '_\(.*\)$', '') = $2 THEN 0 ELSE 1 END,
+    post_count DESC
 LIMIT 10
