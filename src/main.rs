@@ -64,12 +64,14 @@ mod db {
         client: &Client,
         tag_prefix: &String,
     ) -> Result<Vec<Tag>, tokio_postgres::Error> {
-        let escape_prefix = escape_like(&(tag_prefix.to_owned() + "*"));
+        let tag_prefix_str = escape_like(tag_prefix);
+        let escape_prefix = format!("{tag_prefix_str}%");
+
         let stmt = client
             .prepare_cached(include_str!("../sql/fetch_tags_a.sql"))
             .await?;
         let rows = client
-            .query(&stmt, &[&escape_prefix])
+            .query(&stmt, &[&escape_prefix, &tag_prefix_str])
             .await?
             .iter()
             .map(|row| Tag::from_row_ref(row).unwrap())
@@ -207,7 +209,7 @@ async fn main() -> std::io::Result<()> {
         .create_pool(Some(Runtime::Tokio1), NoTls)
         .expect("Failed to create PostgreSQL connection pool");
     let cache = CacheBuilder::new(15_000)
-        .time_to_live(Duration::from_secs(6 * 60 * 60))
+        .time_to_live(Duration::from_secs(60))
         .build();
 
     HttpServer::new(move || {
