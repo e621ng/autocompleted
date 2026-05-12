@@ -64,14 +64,13 @@ mod db {
         client: &Client,
         tag_prefix: &String,
     ) -> Result<Vec<Tag>, tokio_postgres::Error> {
-        let tag_prefix_str = escape_like(tag_prefix);
-        let escape_prefix = format!("{tag_prefix_str}%");
+        let like_pattern = format!("{}%", escape_like(tag_prefix));
 
         let stmt = client
             .prepare_cached(include_str!("../sql/fetch_tags_a.sql"))
             .await?;
         let rows = client
-            .query(&stmt, &[&escape_prefix, &tag_prefix_str])
+            .query(&stmt, &[&like_pattern, &tag_prefix])
             .await?
             .iter()
             .map(|row| Tag::from_row_ref(row).unwrap())
