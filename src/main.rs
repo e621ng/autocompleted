@@ -208,7 +208,7 @@ async fn main() -> std::io::Result<()> {
         .create_pool(Some(Runtime::Tokio1), NoTls)
         .expect("Failed to create PostgreSQL connection pool");
     let cache = CacheBuilder::new(15_000)
-        .time_to_live(Duration::from_secs(60))
+        .time_to_live(Duration::from_secs(6 * 60 * 60))
         .build();
 
     HttpServer::new(move || {
