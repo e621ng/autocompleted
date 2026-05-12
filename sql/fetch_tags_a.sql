@@ -5,7 +5,7 @@
         tags.post_count,
         tags.category,
         NULL AS antecedent_name,
-        length(tags.name) AS name_length
+        (CASE WHEN regexp_replace(tags.name, '_\(.*\)$', '') = $2 THEN 0 ELSE 1 END) AS stripped_name
     FROM tags
     WHERE tags.name LIKE $1 ESCAPE E'\\'
       AND tags.post_count > 0
@@ -20,7 +20,7 @@ UNION ALL
         post_count,
         category,
         antecedent_name,
-        length(antecedent_name) AS name_length
+        (CASE WHEN regexp_replace(antecedent_name, '_\(.*\)$', '') = $2 THEN 0 ELSE 1 END) AS stripped_name
     FROM (
         SELECT DISTINCT ON (name)
             id,
@@ -41,7 +41,7 @@ UNION ALL
               AND tag_aliases.status IN ('active', 'processing', 'queued')
               AND tag_aliases.post_count > 0
               AND tags.name NOT LIKE $1 ESCAPE E'\\'
-            ORDER BY tags.post_count, length(tag_aliases.antecedent_name) DESC
+            ORDER BY tags.post_count DESC
             LIMIT 50
         ) pre_limited
         ORDER BY name, post_count DESC
@@ -49,5 +49,5 @@ UNION ALL
     ORDER BY post_count DESC
     LIMIT 10
 )
-ORDER BY name_length, post_count DESC
-LIMIT 10
+ORDER BY stripped_name, post_count DESC
+LIMIT 10;
