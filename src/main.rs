@@ -218,7 +218,10 @@ async fn autocomplete(
     if let Some(cached_json) = cached {
         Ok(HttpResponse::Ok()
             .insert_header((header::CONTENT_TYPE, "application/json; charset=utf-8"))
-            .insert_header((header::CACHE_CONTROL, "public, max-age=604800"))
+            .insert_header((
+                header::CACHE_CONTROL,
+                "public, max-age=300, s-maxage=3600, stale-while-revalidate=86400",
+            ))
             .body(cached_json))
     } else {
         let client = match data.pool.get().await {
@@ -240,7 +243,10 @@ async fn autocomplete(
         data.cache.insert(prefix, serialized).await;
         Ok(HttpResponse::Ok()
             .insert_header((header::CONTENT_TYPE, "application/json; charset=utf-8"))
-            .insert_header((header::CACHE_CONTROL, "public, max-age=604800"))
+            .insert_header((
+                header::CACHE_CONTROL,
+                "public, max-age=300, s-maxage=3600, stale-while-revalidate=86400",
+            ))
             .body(serialized_copy))
     }
 }
@@ -264,7 +270,7 @@ async fn main() -> std::io::Result<()> {
         .create_pool(Some(Runtime::Tokio1), NoTls)
         .expect("Failed to create PostgreSQL connection pool");
     let cache = CacheBuilder::new(15_000)
-        .time_to_live(Duration::from_secs(6 * 60 * 60))
+        .time_to_live(Duration::from_secs(60 * 60))
         .build();
 
     HttpServer::new(move || {
