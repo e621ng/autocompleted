@@ -251,6 +251,30 @@ async fn autocomplete(
     }
 }
 
+#[get("/ready")]
+async fn ready(data: web::Data<AutocompleteState>) -> HttpResponse {
+    let ok = match data.pool.get().await {
+        Ok(client) => match client.simple_query("SELECT 1;").await {
+            Ok(_) => true,
+            Err(x) => {
+                error!("readiness check failed: {}", x);
+                false
+            }
+        },
+        Err(x) => {
+            error!("readiness check failed: {}", x);
+            false
+        }
+    };
+    let mut res = if ok {
+        HttpResponse::Ok()
+    } else {
+        HttpResponse::ServiceUnavailable()
+    };
+    res.insert_header((header::CACHE_CONTROL, "no-store"))
+        .body(if ok { "ok" } else { "unavailable" })
+}
+
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     use actix_web::{App, HttpServer};
@@ -285,6 +309,7 @@ async fn main() -> std::io::Result<()> {
                 cache: cache.clone(),
             }))
             .service(autocomplete)
+            .service(ready)
     })
     .bind(config.server_addr.clone())?
     .run()

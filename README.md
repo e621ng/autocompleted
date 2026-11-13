@@ -9,7 +9,9 @@ Requests arrive with a `search[name_matches]` query parameter. The service runs 
 1. **Stage A** — prefix match on tag names and alias antecedents via `LIKE`. Fast; uses an index.
 2. **Stage B** — fuzzy similarity match via the PostgreSQL `pg_trgm` `%` operator. Only runs if Stage A returns no results.
 
-Results are cached in-process with [Moka](https://github.com/moka-rs/moka) (15,000 entries, 6-hour TTL) to avoid redundant database queries.
+Results are cached in-process with [Moka](https://github.com/moka-rs/moka) (15,000 entries, 1-hour TTL) to avoid redundant database queries.
+
+`GET /ready` is a readiness probe for load balancers. It runs `SELECT 1;` through the connection pool and returns `200` if the database is reachable, `503` otherwise.
 
 ## Configuration
 
